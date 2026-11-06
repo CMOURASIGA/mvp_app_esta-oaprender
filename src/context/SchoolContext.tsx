@@ -95,6 +95,9 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
   const [isMobileDevicePreview, setIsMobileDevicePreview] = useState(false);
 
+  const activeResponsavelRef = React.useRef<Responsavel | null>(null);
+  const activeAlunoRef = React.useRef<Aluno | null>(null);
+
   /**
    * Carrega os dados do provedor selecionado.
    * Depende EXCLUSIVAMENTE de [providerType].
@@ -130,31 +133,33 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
       setTitulos(allTitulos);
       setIndicadores(dashIndicators);
 
-      // Definir responsável padrão se ainda não definido
-      setActiveResponsavelState((currResp) => {
-        const resp = currResp || allResponsaveis[0] || null;
-        if (resp) {
-          const kids = allAlunos.filter((a) => resp.alunosVinculadosIds.includes(a.id));
-          setAlunosVinculados(kids);
-          setActiveAlunoState((currAluno) => {
-            if (currAluno && kids.some((k) => k.id === currAluno.id)) {
-              return currAluno;
-            }
-            return kids[0] || null;
-          });
+      // Definir responsável padrão sem aninhar chamadas de setState dentro de updaters
+      const currentResp = activeResponsavelRef.current || allResponsaveis[0] || null;
+      let linkedKids: Aluno[] = [];
+      let selectedKid: Aluno | null = null;
 
-          // Mapeia os comunicados com a leitura individual deste responsável
-          setComunicados(
-            allComunicados.map((c) => ({
-              ...c,
-              lidoPeloUsuario: (c.lidosPorResponsaveisIds || []).includes(resp.id),
-            }))
-          );
-        } else {
-          setComunicados(allComunicados);
-        }
-        return resp;
-      });
+      if (currentResp) {
+        linkedKids = allAlunos.filter((a) => currentResp.alunosVinculadosIds.includes(a.id));
+        const currentKid = activeAlunoRef.current;
+        selectedKid = (currentKid && linkedKids.some((k) => k.id === currentKid.id))
+          ? currentKid
+          : (linkedKids[0] || null);
+
+        activeResponsavelRef.current = currentResp;
+        activeAlunoRef.current = selectedKid;
+
+        setActiveResponsavelState(currentResp);
+        setAlunosVinculados(linkedKids);
+        setActiveAlunoState(selectedKid);
+        setComunicados(
+          allComunicados.map((c) => ({
+            ...c,
+            lidoPeloUsuario: (c.lidosPorResponsaveisIds || []).includes(currentResp.id),
+          }))
+        );
+      } else {
+        setComunicados(allComunicados);
+      }
     } catch (err) {
       console.error('Erro ao carregar dados do provedor:', err);
     } finally {
@@ -171,10 +176,15 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
    * Reavalia em memória a lista de filhos vinculados e a situação individual de leitura.
    */
   const setActiveResponsavel = (resp: Responsavel) => {
+    activeResponsavelRef.current = resp;
     setActiveResponsavelState(resp);
+
     const kids = alunos.filter((a) => resp.alunosVinculadosIds.includes(a.id));
+    const firstKid = kids[0] || null;
+    activeAlunoRef.current = firstKid;
+
     setAlunosVinculados(kids);
-    setActiveAlunoState(kids[0] || null);
+    setActiveAlunoState(firstKid);
 
     // Atualiza individualmente a situação de leitura dos comunicados para o novo responsável
     setComunicados((prev) =>
@@ -186,6 +196,7 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
   };
 
   const setActiveAluno = (aluno: Aluno) => {
+    activeAlunoRef.current = aluno;
     setActiveAlunoState(aluno);
   };
 

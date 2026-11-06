@@ -105,55 +105,113 @@ export const SponteIntegrationModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Seção 2: Mapeamento Preliminar de Endpoints Sponte */}
-          <div className="space-y-3">
+          {/* Seção 2: Especificação de Rotas - Oficiais vs Propostas */}
+          <div className="space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Server className="w-4 h-4 text-teal-800" />
-              2. Mapeamento Preliminar de Endpoints Documentados (Sponte API)
+              2. Mapeamento de Rotas: Oficial Fornecedor Sponte vs. Contratos Internos Propostos
             </h3>
-            <div className="overflow-x-auto border border-slate-200 rounded-xl">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-semibold">
-                    <th className="p-2.5">Endpoint / Operação</th>
-                    <th className="p-2.5">Método</th>
-                    <th className="p-2.5">Objetivo no Sistema</th>
-                    <th className="p-2.5">Maturidade / Tipo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  <tr>
-                    <td className="p-2.5 font-mono text-teal-900 font-bold">/api/bi/alunos</td>
-                    <td className="p-2.5 font-mono">GET</td>
-                    <td className="p-2.5">Carga de estudantes, matrículas, status e turmas.</td>
-                    <td className="p-2.5 text-emerald-700 font-semibold">Disponível em BI</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2.5 font-mono text-teal-900 font-bold">/api/bi/financeiro/titulos</td>
-                    <td className="p-2.5 font-mono">GET</td>
-                    <td className="p-2.5">Extrato de parcelas em aberto, pagas e inadimplência.</td>
-                    <td className="p-2.5 text-emerald-700 font-semibold">Disponível em BI</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2.5 font-mono text-teal-900 font-bold">/api/bi/turmas</td>
-                    <td className="p-2.5 font-mono">GET</td>
-                    <td className="p-2.5">Relação de turmas, docentes e capacidade física.</td>
-                    <td className="p-2.5 text-emerald-700 font-semibold">Disponível em BI</td>
-                  </tr>
-                  <tr className="bg-amber-50/50">
-                    <td className="p-2.5 font-mono text-amber-900 font-bold">/servicos/horarios_custom</td>
-                    <td className="p-2.5 font-mono">CUSTOM</td>
-                    <td className="p-2.5">Campos de entrada/saída de alimentação e contraturno.</td>
-                    <td className="p-2.5 text-amber-700 font-semibold">Campo não nativo (ver §3)</td>
-                  </tr>
-                  <tr className="bg-amber-50/50">
-                    <td className="p-2.5 font-mono text-amber-900 font-bold">/comunicacao/mensagens</td>
-                    <td className="p-2.5 font-mono">POST</td>
-                    <td className="p-2.5">Disparo de comunicados para aplicativo dos pais.</td>
-                    <td className="p-2.5 text-amber-700 font-semibold">Requer Gateway Próprio</td>
-                  </tr>
-                </tbody>
-              </table>
+
+            {/* 2A: Rotas Oficiais */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span className="flex items-center gap-1.5 text-teal-950">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  2A. Serviços Oficialmente Documentados pelo Fornecedor Sponte
+                </span>
+                <span className="text-[10px] text-slate-500 font-normal">
+                  Sujeito à liberação de credenciais contratuais da escola
+                </span>
+              </div>
+              <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100/90 border-b border-slate-200 text-slate-700 font-semibold">
+                      <th className="p-2.5">Serviço Oficial Sponte</th>
+                      <th className="p-2.5">Protocolo / Método</th>
+                      <th className="p-2.5">Finalidade Oficial</th>
+                      <th className="p-2.5">Status de Disponibilidade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetAlunos)</td>
+                      <td className="p-2.5 font-mono">SOAP / XML</td>
+                      <td className="p-2.5">Carga cadastral de alunos, matrícula e status de vínculo.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetTurmas)</td>
+                      <td className="p-2.5 font-mono">SOAP / XML</td>
+                      <td className="p-2.5">Relação de turmas, docentes e capacidade do período.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetFinanceiro)</td>
+                      <td className="p-2.5 font-mono">SOAP / XML</td>
+                      <td className="p-2.5">Extrato de parcelas escolares, status e baixas.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">Sponte BI Export (/api/bi/*)</td>
+                      <td className="p-2.5 font-mono">REST / JSON</td>
+                      <td className="p-2.5">Extração analítica e relatórios consolidados para BI.</td>
+                      <td className="p-2.5 text-emerald-700 font-semibold">Condicionado a módulo BI</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 2B: Contratos Internos Propostos */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                <span className="flex items-center gap-1.5 text-slate-900">
+                  <span className="w-2 h-2 rounded-full bg-teal-500" />
+                  2B. Contratos Internos Propostos pela Consult Services (BFF / Gateway Seguro)
+                </span>
+                <span className="text-[10px] text-teal-800 font-medium">
+                  Arquitetura proposta para proteger chaves e unificar regras
+                </span>
+              </div>
+              <div className="overflow-x-auto border border-slate-200 rounded-xl bg-slate-50/50">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100/90 border-b border-slate-200 text-slate-700 font-semibold">
+                      <th className="p-2.5">Rota Interna Proposta</th>
+                      <th className="p-2.5">Método</th>
+                      <th className="p-2.5">Papel no Gateway BFF</th>
+                      <th className="p-2.5">Origem da Definição</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="p-2.5 font-mono text-slate-800 font-semibold">/api/v1/auth/token</td>
+                      <td className="p-2.5 font-mono">POST</td>
+                      <td className="p-2.5">Autentica servidor-a-servidor com Sponte sem expor token no cliente.</td>
+                      <td className="p-2.5 text-teal-800 font-medium">Contrato Interno Consult Services</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-slate-800 font-semibold">/api/v1/alunos</td>
+                      <td className="p-2.5 font-mono">GET</td>
+                      <td className="p-2.5">Normaliza dados SOAP e enriquece com horários e colação/almoço.</td>
+                      <td className="p-2.5 text-teal-800 font-medium">Contrato Interno Consult Services</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-slate-800 font-semibold">/api/v1/financeiro/titulos</td>
+                      <td className="p-2.5 font-mono">GET</td>
+                      <td className="p-2.5">Agrega títulos e linhas digitáveis para visualização no Portal dos Pais.</td>
+                      <td className="p-2.5 text-teal-800 font-medium">Contrato Interno Consult Services</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-slate-800 font-semibold">/api/v1/comunicacao/disparos</td>
+                      <td className="p-2.5 font-mono">POST</td>
+                      <td className="p-2.5">Mensageria e leitura individual (recurso não suportado nativamente na API Sponte).</td>
+                      <td className="p-2.5 text-teal-800 font-medium">Contrato Interno Consult Services</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 

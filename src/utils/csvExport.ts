@@ -1,14 +1,13 @@
 /**
  * Utility for exporting data to CSV with UTF-8 BOM encoding for Brazilian Portuguese Excel compatibility.
  */
-export function exportToCSV<T extends Record<string, unknown>>(
-  filename: string,
+
+export function generateCSVContent<T extends Record<string, unknown>>(
   rows: T[],
   columnHeaders?: { key: keyof T; label: string }[]
-) {
+): string {
   if (!rows || rows.length === 0) {
-    alert('Nenhum dado disponível para exportação com os filtros atuais.');
-    return;
+    return '';
   }
 
   const keys = columnHeaders ? columnHeaders.map((c) => c.key) : (Object.keys(rows[0]) as (keyof T)[]);
@@ -39,7 +38,26 @@ export function exportToCSV<T extends Record<string, unknown>>(
   }
 
   // Prepend \uFEFF BOM for Excel UTF-8 recognition
-  const csvContent = '\uFEFF' + csvRows.join('\r\n');
+  return '\uFEFF' + csvRows.join('\r\n');
+}
+
+export function exportToCSV<T extends Record<string, unknown>>(
+  filename: string,
+  rows: T[],
+  columnHeaders?: { key: keyof T; label: string }[]
+) {
+  if (!rows || rows.length === 0) {
+    if (typeof window !== 'undefined') {
+      alert('Nenhum dado disponível para exportação com os filtros atuais.');
+    }
+    return;
+  }
+
+  const csvContent = generateCSVContent(rows, columnHeaders);
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return csvContent;
+  }
+
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
 

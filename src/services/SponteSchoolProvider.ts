@@ -55,7 +55,9 @@ export class SponteSchoolProvider implements SchoolProvider {
   };
 
   /**
-   * Diagnóstico do contrato técnico para auditoria e homologação
+   * Diagnóstico do contrato técnico para auditoria e homologação (SPEC 00 §3 e §8).
+   * Separa estritamente rotas oficiais da documentação do fornecedor Sponte
+   * de contratos internos propostos pela Consult Services.
    */
   public getContractDiagnostics() {
     return {
@@ -63,13 +65,43 @@ export class SponteSchoolProvider implements SchoolProvider {
       status: this.connectionStatus.status,
       autorizacaoPendente: true,
       ambiente: 'Homologação Técnica',
-      endpointsMapeados: [
-        { rota: '/api/v1/auth/token', finalidade: 'Autenticação Servidor-a-Servidor (OAuth2 / Token Sponte)' },
-        { rota: '/api/v1/alunos', finalidade: 'Sincronização de matrículas, turmas e horários contratados' },
-        { rota: '/api/v1/financeiro/titulos', finalidade: 'Consulta de parcelas, competências e baixas' },
-        { rota: '/api/v1/comunicacao/disparos', finalidade: 'Gateway de mensagens institucionais' },
+      rotasOficiaisFornecedorSponte: [
+        {
+          servico: 'WSIntegracao.asmx / WS_Sponte.asmx (WSDL SOAP Oficial)',
+          metodos: ['GetMatriculas', 'GetAlunos', 'GetFinanceiro', 'GetTurmas'],
+          tipo: 'Especificação Oficial do Fornecedor Sponte',
+          status: 'Oficialmente documentado / Aguarda contratação e credenciais da escola',
+        },
+        {
+          servico: 'Sponte Educational BI API',
+          metodos: ['GET /api/bi/alunos', 'GET /api/bi/financeiro/titulos', 'GET /api/bi/turmas'],
+          tipo: 'Especificação Oficial do Fornecedor Sponte (Analytics)',
+          status: 'Oficialmente documentado / Condicionado à ativação do módulo BI',
+        },
       ],
-      diretrizDeSeguranca: 'Nenhum dado mockado é retornado quando este provedor está selecionado.',
+      contratosInternosPropostosConsultServices: [
+        {
+          rotaInterna: '/api/v1/auth/token',
+          finalidade: 'BFF Gateway: Autenticação Servidor-a-Servidor para não expor credenciais no cliente',
+          tipo: 'Contrato Interno Proposto (Consult Services)',
+        },
+        {
+          rotaInterna: '/api/v1/alunos',
+          finalidade: 'Normalização REST JSON dos dados brutos SOAP e consolidação de horários/refeições',
+          tipo: 'Contrato Interno Proposto (Consult Services)',
+        },
+        {
+          rotaInterna: '/api/v1/financeiro/titulos',
+          finalidade: 'Agregação de boletos e histórico de conciliação financeira',
+          tipo: 'Contrato Interno Proposto (Consult Services)',
+        },
+        {
+          rotaInterna: '/api/v1/comunicacao/disparos',
+          finalidade: 'Gateway de mensageria da escola (Sponte não possui API aberta de push notifications)',
+          tipo: 'Contrato Interno Proposto (Consult Services)',
+        },
+      ],
+      diretrizDeSeguranca: 'Nenhum endpoint interno ou não verificado é apresentado como oficial do Sponte.',
     };
   }
 

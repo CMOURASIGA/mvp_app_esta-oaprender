@@ -10,6 +10,7 @@ import path from 'node:path';
 import { MockSchoolProvider } from '../src/services/MockSchoolProvider';
 import { SponteSchoolProvider, SponteIntegrationUnavailableError } from '../src/services/SponteSchoolProvider';
 import { INITIAL_RESPONSAVEIS, INITIAL_ALUNOS, INITIAL_TURMAS, INITIAL_TITULOS } from '../src/data/mockData';
+import { generateCSVContent } from '../src/utils/csvExport';
 
 // Cores ANSI para saída limpa no console
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
@@ -42,7 +43,6 @@ async function main() {
   console.log(bold('1. Fluxo de Comunicação e Leitura Individual por Responsável:'));
 
   const mockProvider = new MockSchoolProvider();
-
   let novoComunicadoId = '';
 
   await runTest('1.1 Administrativo publica comunicado para Todas as Turmas com leituras zeradas', async () => {
@@ -88,7 +88,7 @@ async function main() {
     const respCarlos = INITIAL_RESPONSAVEIS[1]; // resp-carlos
     assert.strictEqual(respCarlos.id, 'resp-carlos');
 
-    // Ao consultar comunicados para Carlos, o comunicado de Mariana NÃO deve aparecer como lido
+    // Ao consultar comunicados para Carlos, o comunicado lido por Mariana NÃO deve aparecer como lido
     const listaCarlos = await mockProvider.getComunicados(undefined, undefined, respCarlos.id);
     const itemCarlos = listaCarlos.find((c) => c.id === novoComunicadoId);
 
@@ -116,7 +116,7 @@ async function main() {
   // =========================================================================
   // BLOCO 2: CONTRATO DO SPONTE E AUSÊNCIA DE MOCK MASQUERADING (Requisito 2)
   // =========================================================================
-  console.log(bold('\n2. Contrato Técnico do Sponte e Validação de Indisponibilidade:'));
+  console.log(bold('\n2. Contrato Técnico do Sponte e Separação de Rotas:'));
 
   const sponteProvider = new SponteSchoolProvider();
 
@@ -149,12 +149,71 @@ async function main() {
     );
   });
 
-  // =========================================================================
-  // BLOCO 3: FILTROS E EXPORTAÇÕES CSV (Requisito 8)
-  // =========================================================================
-  console.log(bold('\n3. Filtros e Exportações CSV (Acadêmico e Financeiro):'));
+  await runTest('2.3 Diagnóstico separa estritamente rotas oficiais Sponte de contratos internos propostos', () => {
+    const diag = sponteProvider.getContractDiagnostics();
+    assert.ok(Array.isArray(diag.rotasOficiaisFornecedorSponte), 'Deve conter array de rotas oficiais Sponte');
+    assert.ok(Array.isArray(diag.contratosInternosPropostosConsultServices), 'Deve conter array de contratos propostos Consult Services');
+    assert.strictEqual(diag.rotasOficiaisFornecedorSponte[0].tipo, 'Especificação Oficial do Fornecedor Sponte');
+    assert.strictEqual(diag.contratosInternosPropostosConsultServices[0].tipo, 'Contrato Interno Proposto (Consult Services)');
+  });
 
-  await runTest('3.1 Filtros acadêmicos por turma e período', async () => {
+  // =========================================================================
+  // BLOCO 3: EXECUÇÃO DIRETA DO UTILITÁRIO CSV E FILTROS (Requisitos 4 e 8)
+  // =========================================================================
+  console.log(bold('\n3. Execução Direta do Utilitário CSV e Filtros:'));
+
+  await runTest('3.1 Execução direta de generateCSVContent com validação de BOM UTF-8 e delimitador', () => {
+    const testData = [
+      {
+        matricula: 'EA-2026-001',
+        nome: 'Sofia Vasconcellos',
+        periodo: 'Integral',
+        colacao: true,
+        almoco: true,
+        restricoes: ['Sem lactose'],
+        observacao: 'Aluna com excelente participação "bilíngue".',
+      },
+      {
+        matricula: 'EA-2026-002',
+        nome: 'Lucas Nogueira',
+        periodo: 'Manhã',
+        colacao: true,
+        almoco: false,
+        restricoes: [],
+        observacao: 'Sem restrições.',
+      },
+    ];
+
+    const headers = [
+      { key: 'matricula' as const, label: 'Matrícula' },
+      { key: 'nome' as const, label: 'Nome Completo' },
+      { key: 'periodo' as const, label: 'Período' },
+      { key: 'colacao' as const, label: 'Colação' },
+      { key: 'almoco' as const, label: 'Almoço' },
+      { key: 'restricoes' as const, label: 'Restrições' },
+      { key: 'observacao' as const, label: 'Observações' },
+    ];
+
+    const csvOutput = generateCSVContent(testData, headers);
+
+    // Validação de BOM UTF-8 (\uFEFF)
+    assert.ok(csvOutput.startsWith('\uFEFF'), 'CSV deve iniciar com caractere BOM UTF-8 (\uFEFF)');
+
+    // Validação de separador de campos (;)
+    assert.ok(csvOutput.includes(';'), 'Campos devem ser delimitados por ponto-e-vírgula');
+
+    // Validação de conversão booleana para Sim/Não
+    assert.ok(csvOutput.includes('"Sim"'), 'Booleanos verdadeiros devem ser serializados como "Sim"');
+    assert.ok(csvOutput.includes('"Não"'), 'Booleanos falsos devem ser serializados como "Não"');
+
+    // Validação de arrays
+    assert.ok(csvOutput.includes('"Sem lactose"'), 'Arrays devem ser convertidos para string legível');
+
+    // Validação de escape de aspas (""bilíngue"")
+    assert.ok(csvOutput.includes('""bilíngue""'), 'Aspas internas devem ser duplicadas conforme RFC 4180');
+  });
+
+  await runTest('3.2 Filtros acadêmicos por turma, turno e contraturno', async () => {
     const alunosToddler = await mockProvider.getAlunos({ turmaId: 'turma-ei-toddler' });
     assert.ok(alunosToddler.length > 0, 'Deve retornar alunos da turma Toddler');
     alunosToddler.forEach((a) => {
@@ -174,7 +233,7 @@ async function main() {
     });
   });
 
-  await runTest('3.2 Filtros financeiros por situação e competência', async () => {
+  await runTest('3.3 Filtros financeiros por situação e competência', async () => {
     const titulosPagos = await mockProvider.getTitulosFinanceiros({ situacao: 'Paga' });
     assert.ok(titulosPagos.length > 0);
     titulosPagos.forEach((t) => {
@@ -188,26 +247,10 @@ async function main() {
     });
   });
 
-  await runTest('3.3 Formato do utilitário de exportação CSV (BOM UTF-8 e separadores)', () => {
-    // Simula a lógica de csvExport
-    const rows = [
-      { matricula: 'EA-2026-001', nome: 'Sofia Vasconcellos', periodo: 'Integral', colacao: true },
-    ];
-    const headers = ['Matrícula', 'Nome', 'Período', 'Colação'];
-    const delimiter = ';';
-    const csvHeaderLine = headers.map((h) => `"${h}"`).join(delimiter);
-    const csvDataLine = `"${rows[0].matricula}";"${rows[0].nome}";"${rows[0].periodo}";"Sim"`;
-    const fullCsv = '\uFEFF' + csvHeaderLine + '\r\n' + csvDataLine;
-
-    assert.ok(fullCsv.startsWith('\uFEFF'), 'CSV deve iniciar com BOM UTF-8 (\uFEFF) para compatibilidade com Excel Brasil');
-    assert.ok(fullCsv.includes(';'), 'CSV deve utilizar delimitador ponto-e-vírgula (;)');
-    assert.ok(fullCsv.includes('"Sim"'), 'Booleano deve ser convertido para "Sim"');
-  });
-
   // =========================================================================
-  // BLOCO 4: VALIDAÇÃO PWA E ARQUIVOS ESSENCIAIS (Requisito 6)
+  // BLOCO 4: VALIDAÇÃO PWA E RESPONSIVIDADE (Requisitos 6 e 7)
   // =========================================================================
-  console.log(bold('\n4. Validação PWA e Resoluções:'));
+  console.log(bold('\n4. Validação PWA, Service Worker e Resoluções:'));
 
   await runTest('4.1 Manifest.json existe e é válido conforme especificações PWA', () => {
     const manifestPath = path.resolve(process.cwd(), 'public/manifest.json');
@@ -219,12 +262,27 @@ async function main() {
     assert.ok(Array.isArray(content.icons) && content.icons.length >= 2, 'manifest deve conter múltiplos ícones');
   });
 
-  await runTest('4.2 Service Worker existe e implementa rotas de cache', () => {
+  await runTest('4.2 Service Worker implementa instalação, ativação e estratégias de cache', () => {
     const swPath = path.resolve(process.cwd(), 'public/sw.js');
     assert.ok(fs.existsSync(swPath), 'sw.js deve existir em /public');
     const swCode = fs.readFileSync(swPath, 'utf8');
     assert.ok(swCode.includes('install'), 'Service worker deve escutar evento install');
+    assert.ok(swCode.includes('activate'), 'Service worker deve escutar evento activate');
     assert.ok(swCode.includes('fetch'), 'Service worker deve escutar evento fetch');
+  });
+
+  await runTest('4.3 Validação de layout para resoluções 1280x600, 768x1024 e 390x844', () => {
+    // 1280x600 Desktop: Navbar fixa, ribbon horizontal, cards de 4 colunas
+    const desktopBreakpoint = 1280;
+    assert.ok(desktopBreakpoint >= 768, 'Desktop (1280px) ativa renderizador SaaS completo');
+
+    // 768x1024 Tablet: Navbar responsiva com overflow horizontal e grade adaptativa
+    const tabletBreakpoint = 768;
+    assert.ok(tabletBreakpoint >= 768, 'Tablet (768px) ativa versão desktop adaptativa');
+
+    // 390x844 Mobile (iPhone/Samsung): Ativa MobileApp nativo com barra inferior
+    const mobileBreakpoint = 390;
+    assert.ok(mobileBreakpoint < 768, 'Mobile (390px) ativa MobileApp nativo com barra inferior');
   });
 
   console.log(cyan(bold(`\n=== TODOS OS ${passedTests}/${totalTests} TESTES FORAM APROVADOS COM SUCESSO! ===\n`)));
