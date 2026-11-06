@@ -1,0 +1,6 @@
+{
+  "name": "Estação do Aprender - Gestão & Portal da Família",
+  "description": "Plataforma integrada de Gestão Escolar e Portal da Família para o Colégio Estação do Aprender, desenvolvida pela Consult Services Tecnologia (MVP SPEC 00).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
