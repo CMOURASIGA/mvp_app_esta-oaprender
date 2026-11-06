@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSchool, ActiveModule } from '../../context/SchoolContext';
+import { useSchool } from '../../context/SchoolContext';
 import { Logo } from './Logo';
 import { PWAInstallButton } from './PWAInstallButton';
 import {

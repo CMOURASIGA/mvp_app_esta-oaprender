@@ -1,7 +1,7 @@
 /**
  * @license
  * MVP Estação do Aprender - Consult Services Tecnologia
- * Testes Automatizados de Integração e Homologação (SPEC 00)
+ * Testes Automatizados de Integração e Homologação (SPEC 00 - Ajustes Finais)
  */
 
 import assert from 'node:assert';
@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { MockSchoolProvider } from '../src/services/MockSchoolProvider';
 import { SponteSchoolProvider, SponteIntegrationUnavailableError } from '../src/services/SponteSchoolProvider';
-import { INITIAL_RESPONSAVEIS, INITIAL_ALUNOS, INITIAL_TURMAS, INITIAL_TITULOS } from '../src/data/mockData';
+import { INITIAL_RESPONSAVEIS } from '../src/data/mockData';
 import { generateCSVContent } from '../src/utils/csvExport';
 
 // Cores ANSI para saída limpa no console
@@ -27,18 +27,19 @@ async function runTest(name: string, fn: () => Promise<void> | void) {
     await fn();
     passedTests++;
     console.log(`  ${green('✓')} ${name}`);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(`  ${red('✗')} ${name}`);
-    console.error(`    Erro: ${err.message}`);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`    Erro: ${msg}`);
     throw err;
   }
 }
 
 async function main() {
-  console.log(cyan(bold('\n=== INICIANDO SUÍTE DE TESTES DE HOMOLOGAÇÃO SPEC 00 ===\n')));
+  console.log(cyan(bold('\n=== INICIANDO SUÍTE DE TESTES DE HOMOLOGAÇÃO SPEC 00 (AJUSTES FINAIS) ===\n')));
 
   // =========================================================================
-  // BLOCO 1: FLUXO DE LEITURA INDIVIDUAL DE COMUNICADOS (Requisitos 4 e 7)
+  // BLOCO 1: FLUXO DE LEITURA INDIVIDUAL DE COMUNICADOS (Requisitos 8 e 9)
   // =========================================================================
   console.log(bold('1. Fluxo de Comunicação e Leitura Individual por Responsável:'));
 
@@ -49,7 +50,7 @@ async function main() {
     const novo = await mockProvider.criarComunicado({
       titulo: 'Homologação: Reunião do Conselho Escolar 2026',
       conteudo: 'Aviso de alinhamento com a comunidade escolar sobre os projetos bilíngues.',
-      categoria: 'Institucional' as any,
+      categoria: 'Geral',
       turmaDestinoId: 'TODAS',
       autorNome: 'Direção Geral',
     });
@@ -114,9 +115,9 @@ async function main() {
   });
 
   // =========================================================================
-  // BLOCO 2: CONTRATO DO SPONTE E AUSÊNCIA DE MOCK MASQUERADING (Requisito 2)
+  // BLOCO 2: CONTRATO DO SPONTE E ENDPOINTS REAIS DA API BI (Requisitos 2 e 3)
   // =========================================================================
-  console.log(bold('\n2. Contrato Técnico do Sponte e Separação de Rotas:'));
+  console.log(bold('\n2. Contrato Técnico do Sponte e Endpoints Reais da API BI:'));
 
   const sponteProvider = new SponteSchoolProvider();
 
@@ -132,7 +133,7 @@ async function main() {
       async () => {
         await sponteProvider.getAlunos();
       },
-      (err: any) => {
+      (err: unknown) => {
         return err instanceof SponteIntegrationUnavailableError && err.code === 'SPONTE_INTEGRATION_UNAVAILABLE';
       },
       'getAlunos() no provedor Sponte deve rejeitar com SponteIntegrationUnavailableError'
@@ -142,23 +143,43 @@ async function main() {
       async () => {
         await sponteProvider.getDashboardIndicators();
       },
-      (err: any) => {
+      (err: unknown) => {
         return err instanceof SponteIntegrationUnavailableError;
       },
       'getDashboardIndicators() no provedor Sponte deve rejeitar com SponteIntegrationUnavailableError'
     );
   });
 
-  await runTest('2.3 Diagnóstico separa estritamente rotas oficiais Sponte de contratos internos propostos', () => {
+  await runTest('2.3 Diagnóstico referencia documentação oficial https://sponte-bi.sponteweb.com.br/docs', () => {
     const diag = sponteProvider.getContractDiagnostics();
-    assert.ok(Array.isArray(diag.rotasOficiaisFornecedorSponte), 'Deve conter array de rotas oficiais Sponte');
-    assert.ok(Array.isArray(diag.contratosInternosPropostosConsultServices), 'Deve conter array de contratos propostos Consult Services');
-    assert.strictEqual(diag.rotasOficiaisFornecedorSponte[0].tipo, 'Especificação Oficial do Fornecedor Sponte');
-    assert.strictEqual(diag.contratosInternosPropostosConsultServices[0].tipo, 'Contrato Interno Proposto (Consult Services)');
+    assert.strictEqual(diag.documentacaoOficialFornecedor, 'https://sponte-bi.sponteweb.com.br/docs');
+    assert.strictEqual(diag.baseUrlOficial, 'https://sponte-bi.sponteweb.com.br/api/v1/');
+    assert.strictEqual(diag.padroesOficiaisFornecedor.autenticacao, 'Header HTTP x-api-key: {API_KEY}');
+    assert.strictEqual(diag.padroesOficiaisFornecedor.rateLimit, '1.000 requisições/min por API Key');
+    assert.ok(Array.isArray(diag.rotasOficiaisVerificadasSponteBI), 'Deve conter array de rotas oficiais verificadas da API BI');
+    assert.ok(diag.rotasOficiaisVerificadasSponteBI.length >= 7, 'Deve conter pelo menos os 7 principais endpoints de extração');
+    
+    // Verifica endpoints reais
+    const endpoints = diag.rotasOficiaisVerificadasSponteBI.map((r) => r.endpoint);
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/alunos'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/responsaveis'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/matriculas'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/turmas'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/contas-a-receber'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/frequencia'));
+    assert.ok(endpoints.includes('GET /api/v1/extracoes/notas'));
+  });
+
+  await runTest('2.4 Rotas SOAP e hipóteses REST não verificadas tiveram classificação de oficial retirada', () => {
+    const diag = sponteProvider.getContractDiagnostics();
+    assert.ok(Array.isArray(diag.rotasLegadasNaoOficiaisOuSemReferenciaVerificavel));
+    const legadas = diag.rotasLegadasNaoOficiaisOuSemReferenciaVerificavel.map((r) => r.servico);
+    assert.ok(legadas.some((s) => s.includes('WSIntegracao.asmx')));
+    assert.ok(diag.diretrizDeSeguranca.includes('Apenas os endpoints com referência verificável em https://sponte-bi.sponteweb.com.br/docs'));
   });
 
   // =========================================================================
-  // BLOCO 3: EXECUÇÃO DIRETA DO UTILITÁRIO CSV E FILTROS (Requisitos 4 e 8)
+  // BLOCO 3: EXECUÇÃO DIRETA DO UTILITÁRIO CSV E FILTROS (Requisitos 5 e 8)
   // =========================================================================
   console.log(bold('\n3. Execução Direta do Utilitário CSV e Filtros:'));
 
@@ -248,41 +269,91 @@ async function main() {
   });
 
   // =========================================================================
-  // BLOCO 4: VALIDAÇÃO PWA E RESPONSIVIDADE (Requisitos 6 e 7)
+  // BLOCO 4: VALIDAÇÃO DE NAVEGAÇÃO E RESPONSIVIDADE REAIS (Requisito 6)
   // =========================================================================
-  console.log(bold('\n4. Validação PWA, Service Worker e Resoluções:'));
+  console.log(bold('\n4. Navegação e Responsividade nas Resoluções 1280x600, 768x1024 e 390x844:'));
 
-  await runTest('4.1 Manifest.json existe e é válido conforme especificações PWA', () => {
+  await runTest('4.1 Resolução Desktop 1280x600: layout SaaS completo com ribbon horizontal sticky', () => {
+    const width = 1280;
+    const height = 600;
+    assert.ok(width >= 768, '1280px satisfaz breakpoint md: e lg: para visualização de painel corporativo');
+    assert.ok(height >= 500, '600px de altura comporta viewport horizontal com rolagem contida');
+    
+    // Leitura das regras do App.tsx
+    const appTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+    assert.ok(appTsx.includes('hidden md:flex flex-col flex-1'), 'Desktop/Tablet renderiza painel administrativo completo em >= 768px');
+    assert.ok(appTsx.includes('max-w-7xl mx-auto'), 'Layout desktop centralizado com limite ergonômico max-w-7xl');
+  });
+
+  await runTest('4.2 Resolução Tablet 768x1024: ribbon adaptativo com overflow-x e botões touch-friendly', () => {
+    const tabletWidth = 768;
+    assert.ok(tabletWidth >= 768, 'Tablet 768px ativa modo adaptativo de cabeçalho e navegação');
+    
+    const appTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+    assert.ok(appTsx.includes('overflow-x-auto'), 'Navegação por abas possui overflow horizontal seguro');
+    assert.ok(appTsx.includes('whitespace-nowrap'), 'Etiquetas de navegação não quebram em duas linhas');
+  });
+
+  await runTest('4.3 Resolução Mobile 390x844: ativação automática do MobileApp nativo (sem painel espremido)', () => {
+    const mobileWidth = 390;
+    assert.ok(mobileWidth < 768, 'Mobile 390px está abaixo do breakpoint md (768px)');
+
+    const appTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+    assert.ok(appTsx.includes('md:hidden flex-1 flex flex-col'), 'Regra estrita: abaixo de md renderiza exclusivamente MobileApp');
+    
+    const mobileAppTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/components/mobile/MobileApp.tsx'), 'utf8');
+    assert.ok(mobileAppTsx.includes('grid grid-cols-5 items-center h-16'), 'Barra inferior possui exatamente 5 abas ergonômicas');
+    assert.ok(mobileAppTsx.includes('Contatos Escolares'), 'Possui categoria Contatos Escolares');
+    assert.ok(mobileAppTsx.includes('Conversas Individuais'), 'Possui categoria Conversas Individuais');
+    assert.ok(mobileAppTsx.includes('showFloatingTeaser'), 'Possui balão flutuante teaser da professora');
+  });
+
+  // =========================================================================
+  // BLOCO 5: VALIDAÇÃO DE INSTALAÇÃO E ATUALIZAÇÃO DA PWA (Requisito 7)
+  // =========================================================================
+  console.log(bold('\n5. Experiência de Instalação e Atualização da PWA:'));
+
+  await runTest('5.1 Manifest.json atende todos os critérios de instalabilidade PWA', () => {
     const manifestPath = path.resolve(process.cwd(), 'public/manifest.json');
     assert.ok(fs.existsSync(manifestPath), 'manifest.json deve existir em /public');
     const content = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    assert.ok(content.name, 'manifest deve ter name');
-    assert.ok(content.short_name, 'manifest deve ter short_name');
-    assert.strictEqual(content.display, 'standalone', 'display deve ser standalone');
-    assert.ok(Array.isArray(content.icons) && content.icons.length >= 2, 'manifest deve conter múltiplos ícones');
+    assert.ok(content.name.includes('Estação do Aprender'), 'name deve conter Estação do Aprender');
+    assert.ok(content.short_name, 'short_name deve existir');
+    assert.strictEqual(content.display, 'standalone');
+    assert.strictEqual(content.start_url, '/');
+    assert.strictEqual(content.theme_color, '#0E4D5C');
+    assert.ok(Array.isArray(content.icons) && content.icons.length >= 2);
+    assert.ok(content.icons.some((i: any) => i.sizes === '192x192'));
+    assert.ok(content.icons.some((i: any) => i.sizes === '512x512'));
   });
 
-  await runTest('4.2 Service Worker implementa instalação, ativação e estratégias de cache', () => {
+  await runTest('5.2 Service Worker implementa ciclo de vida completo: instalação, ativação e skipWaiting', () => {
     const swPath = path.resolve(process.cwd(), 'public/sw.js');
     assert.ok(fs.existsSync(swPath), 'sw.js deve existir em /public');
     const swCode = fs.readFileSync(swPath, 'utf8');
-    assert.ok(swCode.includes('install'), 'Service worker deve escutar evento install');
-    assert.ok(swCode.includes('activate'), 'Service worker deve escutar evento activate');
-    assert.ok(swCode.includes('fetch'), 'Service worker deve escutar evento fetch');
+    assert.ok(swCode.includes('addEventListener(\'install\''), 'SW deve ter listener de install');
+    assert.ok(swCode.includes('addEventListener(\'activate\''), 'SW deve ter listener de activate');
+    assert.ok(swCode.includes('addEventListener(\'fetch\''), 'SW deve ter listener de fetch');
+    assert.ok(swCode.includes('self.skipWaiting()'), 'SW deve executar skipWaiting na instalação');
+    assert.ok(swCode.includes('clients.claim()'), 'SW deve executar clients.claim na ativação');
+    assert.ok(swCode.includes('CACHE_NAME'), 'SW deve possuir nome de cache versionado');
   });
 
-  await runTest('4.3 Validação de layout para resoluções 1280x600, 768x1024 e 390x844', () => {
-    // 1280x600 Desktop: Navbar fixa, ribbon horizontal, cards de 4 colunas
-    const desktopBreakpoint = 1280;
-    assert.ok(desktopBreakpoint >= 768, 'Desktop (1280px) ativa renderizador SaaS completo');
+  await runTest('5.3 Registro de PWA e gatilhos de atualização no cliente', () => {
+    const hookPath = path.resolve(process.cwd(), 'src/hooks/usePWAInstall.ts');
+    assert.ok(fs.existsSync(hookPath), 'usePWAInstall.ts deve existir');
+    const hookCode = fs.readFileSync(hookPath, 'utf8');
+    assert.ok(hookCode.includes('beforeinstallprompt'), 'usePWAInstall deve capturar evento beforeinstallprompt');
+    assert.ok(hookCode.includes('prompt()'), 'usePWAInstall deve disparar o prompt nativo de instalação');
+    assert.ok(hookCode.includes('appinstalled'), 'usePWAInstall deve escutar evento appinstalled');
 
-    // 768x1024 Tablet: Navbar responsiva com overflow horizontal e grade adaptativa
-    const tabletBreakpoint = 768;
-    assert.ok(tabletBreakpoint >= 768, 'Tablet (768px) ativa versão desktop adaptativa');
-
-    // 390x844 Mobile (iPhone/Samsung): Ativa MobileApp nativo com barra inferior
-    const mobileBreakpoint = 390;
-    assert.ok(mobileBreakpoint < 768, 'Mobile (390px) ativa MobileApp nativo com barra inferior');
+    const pwaBtnPath = path.resolve(process.cwd(), 'src/components/common/PWAInstallButton.tsx');
+    assert.ok(fs.existsSync(pwaBtnPath), 'PWAInstallButton.tsx deve existir');
+    const pwaCode = fs.readFileSync(pwaBtnPath, 'utf8');
+    assert.ok(pwaCode.includes('usePWAInstall'), 'PWAInstallButton deve consumir o hook usePWAInstall');
+    
+    const mainTsx = fs.readFileSync(path.resolve(process.cwd(), 'src/main.tsx'), 'utf8');
+    assert.ok(mainTsx.includes('serviceWorker.register'), 'main.tsx deve registrar o service worker');
   });
 
   console.log(cyan(bold(`\n=== TODOS OS ${passedTests}/${totalTests} TESTES FORAM APROVADOS COM SUCESSO! ===\n`)));

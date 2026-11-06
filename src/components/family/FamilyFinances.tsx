@@ -3,9 +3,6 @@ import { useSchool } from '../../context/SchoolContext';
 import { TituloFinanceiro } from '../../types/school';
 import {
   DollarSign,
-  CheckCircle,
-  Clock,
-  AlertCircle,
   FileText,
   Copy,
   Check,
@@ -14,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export const FamilyFinances: React.FC = () => {
-  const { titulos, activeAluno, activeResponsavel } = useSchool();
+  const { titulos, activeAluno } = useSchool();
   const [tituloAberto, setTituloAberto] = useState<TituloFinanceiro | null>(null);
   const [copiado, setCopiado] = useState(false);
 

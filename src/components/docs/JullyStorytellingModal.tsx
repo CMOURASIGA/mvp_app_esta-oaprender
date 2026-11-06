@@ -5,12 +5,6 @@ import {
   X,
   Sparkles,
   ArrowRight,
-  Clock,
-  Heart,
-  MessageSquare,
-  FileSpreadsheet,
-  ShieldCheck,
-  CheckCircle,
 } from 'lucide-react';
 
 export const JullyStorytellingModal: React.FC = () => {

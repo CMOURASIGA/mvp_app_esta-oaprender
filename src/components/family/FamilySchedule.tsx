@@ -6,9 +6,7 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  Filter,
   FileText,
-  Sparkles,
 } from 'lucide-react';
 
 export const FamilySchedule: React.FC = () => {

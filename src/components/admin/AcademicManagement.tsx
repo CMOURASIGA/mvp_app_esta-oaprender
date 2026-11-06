@@ -1,19 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { Aluno, PeriodoEscolar, SituacaoMatricula } from '../../types/school';
+import { Aluno } from '../../types/school';
 import { exportToCSV } from '../../utils/csvExport';
 import {
   Search,
-  Filter,
-  Download,
   Clock,
   Utensils,
   Sparkles,
   Check,
   X,
   Eye,
-  Calendar,
-  AlertCircle,
   FileSpreadsheet,
 } from 'lucide-react';
 

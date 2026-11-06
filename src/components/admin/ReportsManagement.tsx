@@ -10,8 +10,6 @@ import {
   Sparkles,
   DollarSign,
   Filter,
-  Check,
-  Building,
 } from 'lucide-react';
 
 type ReportTab = 'turmas' | 'horarios' | 'alimentacao' | 'smartLiving' | 'financeiro';

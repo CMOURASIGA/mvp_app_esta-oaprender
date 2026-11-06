@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { CategoriaComunicado, Comunicado } from '../../types/school';
+import { CategoriaComunicado } from '../../types/school';
 import {
   MessageSquare,
   Plus,
@@ -10,10 +10,8 @@ import {
   Paperclip,
   Clock,
   Filter,
-  Check,
   Sparkles,
   Eye,
-  FileText,
 } from 'lucide-react';
 
 export const CommunicationManagement: React.FC = () => {

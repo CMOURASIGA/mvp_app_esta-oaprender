@@ -1,13 +1,9 @@
 import React from 'react';
 import { useSchool } from '../../context/SchoolContext';
 import {
-  Clock,
   Utensils,
   Sparkles,
-  CheckCircle2,
   BookOpen,
-  Calendar,
-  AlertCircle,
   GraduationCap,
 } from 'lucide-react';
 

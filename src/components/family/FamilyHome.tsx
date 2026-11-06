@@ -8,7 +8,6 @@ import {
   Utensils,
   Sparkles,
   ChevronRight,
-  ShieldCheck,
   CheckCircle2,
   GraduationCap,
   HeartHandshake,
@@ -207,6 +206,7 @@ export const FamilyHome: React.FC = () => {
               className="text-xs font-semibold text-teal-800 hover:text-teal-900 underline cursor-pointer"
             >
               Ver Todos ({comunicados.length})
+              {unreadComunicados.length > 0 && ` (${unreadComunicados.length} novos)`}
             </button>
           </div>
 

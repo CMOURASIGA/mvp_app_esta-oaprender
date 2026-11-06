@@ -6,11 +6,8 @@ import {
   Paperclip,
   Clock,
   CheckCircle2,
-  Eye,
   X,
-  Sparkles,
   Download,
-  Check,
 } from 'lucide-react';
 
 export const FamilyCommunications: React.FC = () => {

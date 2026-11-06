@@ -7,7 +7,6 @@ import {
   Database,
   Lock,
   Layers,
-  CheckCircle,
   AlertTriangle,
   Server,
   Zap,
@@ -109,58 +108,79 @@ export const SponteIntegrationModal: React.FC = () => {
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Server className="w-4 h-4 text-teal-800" />
-              2. Mapeamento de Rotas: Oficial Fornecedor Sponte vs. Contratos Internos Propostos
+              2. Mapeamento de Rotas: Endpoints Oficiais Verificados (Sponte BI) vs. Contratos Internos Propostos
             </h3>
 
-            {/* 2A: Rotas Oficiais */}
+            {/* 2A: Rotas Oficiais Verificadas Sponte BI */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                 <span className="flex items-center gap-1.5 text-teal-950">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  2A. Serviços Oficialmente Documentados pelo Fornecedor Sponte
+                  2A. Endpoints Oficiais da API de BI (Documentados em https://sponte-bi.sponteweb.com.br/docs)
                 </span>
                 <span className="text-[10px] text-slate-500 font-normal">
-                  Sujeito à liberação de credenciais contratuais da escola
+                  Base: https://sponte-bi.sponteweb.com.br/api/v1/ · Header: x-api-key · Rate Limit: 1.000 req/min · D-1
                 </span>
               </div>
               <div className="overflow-x-auto border border-slate-200 rounded-xl">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-100/90 border-b border-slate-200 text-slate-700 font-semibold">
-                      <th className="p-2.5">Serviço Oficial Sponte</th>
-                      <th className="p-2.5">Protocolo / Método</th>
-                      <th className="p-2.5">Finalidade Oficial</th>
+                      <th className="p-2.5">Endpoint Oficial Verificado</th>
+                      <th className="p-2.5">Método / Autenticação</th>
+                      <th className="p-2.5">Recurso / Finalidade</th>
                       <th className="p-2.5">Status de Disponibilidade</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 font-sans">
                     <tr>
-                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetAlunos)</td>
-                      <td className="p-2.5 font-mono">SOAP / XML</td>
-                      <td className="p-2.5">Carga cadastral de alunos, matrícula e status de vínculo.</td>
-                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/alunos</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Cadastro completo dos alunos, perfis e identificadores únicos.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetTurmas)</td>
-                      <td className="p-2.5 font-mono">SOAP / XML</td>
-                      <td className="p-2.5">Relação de turmas, docentes e capacidade do período.</td>
-                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/responsaveis</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Dados de contato e vínculo parental com os alunos matriculados.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-mono text-teal-900 font-bold">WSIntegracao.asmx (GetFinanceiro)</td>
-                      <td className="p-2.5 font-mono">SOAP / XML</td>
-                      <td className="p-2.5">Extrato de parcelas escolares, status e baixas.</td>
-                      <td className="p-2.5 text-amber-700 font-semibold">Aguardando chave oficial</td>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/matriculas</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Histórico, status das matrículas e enturmação dos estudantes.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
                     </tr>
                     <tr>
-                      <td className="p-2.5 font-mono text-teal-900 font-bold">Sponte BI Export (/api/bi/*)</td>
-                      <td className="p-2.5 font-mono">REST / JSON</td>
-                      <td className="p-2.5">Extração analítica e relatórios consolidados para BI.</td>
-                      <td className="p-2.5 text-emerald-700 font-semibold">Condicionado a módulo BI</td>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/turmas</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Relação de turmas, docentes responsáveis, capacidades e períodos.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/contas-a-receber</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Títulos de mensalidades escolares, vencimentos, descontos e liquidações.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/frequencia</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Registros analíticos de assiduidade, presenças e faltas dos alunos.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2.5 font-mono text-teal-900 font-bold">GET /api/v1/extracoes/notas</td>
+                      <td className="p-2.5 font-mono">REST / x-api-key</td>
+                      <td className="p-2.5">Desempenho acadêmico e avaliações dos estudantes.</td>
+                      <td className="p-2.5 text-amber-700 font-semibold">Oficial · Aguarda API Key</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+              <p className="text-[11px] text-slate-500 pt-1">
+                * Nota de conformidade (SPEC 00 §8): Qualquer menção a rotas legadas SOAP/WSDL (ex.: <code>WSIntegracao.asmx</code>) ou rotas REST não verificadas teve sua classificação de oficial retirada, pois não contam com referência pública em <code>https://sponte-bi.sponteweb.com.br/docs</code>.
+              </p>
             </div>
 
             {/* 2B: Contratos Internos Propostos */}

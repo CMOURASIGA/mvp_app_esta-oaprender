@@ -3,10 +3,6 @@ import { useSchool } from '../../context/SchoolContext';
 import {
   CheckCircle2,
   X,
-  ShieldCheck,
-  FileCheck,
-  Play,
-  RotateCcw,
 } from 'lucide-react';
 
 interface TestItem {
@@ -18,9 +14,9 @@ interface TestItem {
 }
 
 export const AcceptanceCriteriaModal: React.FC = () => {
-  const { showAcceptanceCriteria, setShowAcceptanceCriteria, comunicados, alunos } = useSchool();
+  const { showAcceptanceCriteria, setShowAcceptanceCriteria, comunicados } = useSchool();
 
-  const [testResults, setTestResults] = useState<TestItem[]>([
+  const [testResults] = useState<TestItem[]>([
     {
       id: 'crit-01',
       categoria: 'Navegação',

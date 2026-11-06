@@ -21,22 +21,16 @@ import {
   Check,
   Send,
   X,
-  Phone,
   ArrowLeft,
   ChevronDown,
   Wifi,
   Battery,
-  Building,
-  UserCheck,
   AlertTriangle,
-  QrCode,
-  BookOpen,
   LayoutGrid,
 } from 'lucide-react';
 
 export const MobileApp: React.FC = () => {
   const {
-    activeResponsavel,
     activeAluno,
     alunosVinculados,
     setActiveAluno,

@@ -28,8 +28,6 @@ import {
   Clock,
   Smartphone,
   X,
-  Users,
-  ShieldCheck,
 } from 'lucide-react';
 
 const SchoolApp: React.FC = () => {

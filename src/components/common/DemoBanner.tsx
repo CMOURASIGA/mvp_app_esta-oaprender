@@ -25,9 +25,6 @@ export const DemoBanner: React.FC = () => {
   const [copiado, setCopiado] = useState(false);
 
   const devAppUrl = 'https://ais-dev-duwm3v66ieuovtl55gzjmw-58247857543.us-east1.run.app';
-  const sharedAppUrl = 'https://ais-pre-duwm3v66ieuovtl55gzjmw-58247857543.us-east1.run.app';
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : devAppUrl;
-  const activeTestingUrl = currentOrigin.includes('ais-dev') ? devAppUrl : sharedAppUrl;
 
   const handleCopyLink = (url: string) => {
     navigator.clipboard.writeText(url);

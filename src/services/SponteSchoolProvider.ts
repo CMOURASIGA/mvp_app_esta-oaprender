@@ -65,43 +65,124 @@ export class SponteSchoolProvider implements SchoolProvider {
       status: this.connectionStatus.status,
       autorizacaoPendente: true,
       ambiente: 'Homologação Técnica',
-      rotasOficiaisFornecedorSponte: [
+      documentacaoOficialFornecedor: 'https://sponte-bi.sponteweb.com.br/docs',
+      baseUrlOficial: 'https://sponte-bi.sponteweb.com.br/api/v1/',
+      padroesOficiaisFornecedor: {
+        autenticacao: 'Header HTTP x-api-key: {API_KEY}',
+        metodoHttp: 'GET',
+        formatoRetorno: 'JSON',
+        rateLimit: '1.000 requisições/min por API Key',
+        defasagemDados: 'D-1 (Cargas analíticas completas ou incrementais por data/hora)',
+      },
+      rotasOficiaisVerificadasSponteBI: [
         {
-          servico: 'WSIntegracao.asmx / WS_Sponte.asmx (WSDL SOAP Oficial)',
-          metodos: ['GetMatriculas', 'GetAlunos', 'GetFinanceiro', 'GetTurmas'],
-          tipo: 'Especificação Oficial do Fornecedor Sponte',
-          status: 'Oficialmente documentado / Aguarda contratação e credenciais da escola',
+          endpoint: 'GET /api/v1/extracoes/alunos',
+          descricao: 'Dados cadastrais e perfil dos estudantes',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
         },
         {
-          servico: 'Sponte Educational BI API',
-          metodos: ['GET /api/bi/alunos', 'GET /api/bi/financeiro/titulos', 'GET /api/bi/turmas'],
-          tipo: 'Especificação Oficial do Fornecedor Sponte (Analytics)',
-          status: 'Oficialmente documentado / Condicionado à ativação do módulo BI',
+          endpoint: 'GET /api/v1/extracoes/responsaveis',
+          descricao: 'Informações de contato e vínculo com os alunos',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/matriculas',
+          descricao: 'Histórico, status e enturmação dos alunos',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/turmas',
+          descricao: 'Estrutura curricular, períodos e salas',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/cursos',
+          descricao: 'Matriz curricular, segmentos e séries educacionais',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/contas-a-receber',
+          descricao: 'Títulos de mensalidades, vencimentos e histórico financeiro',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/contas-a-pagar',
+          descricao: 'Despesas e custos operacionais institucionais',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/frequencia',
+          descricao: 'Controle de presença e faltas',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/notas',
+          descricao: 'Desempenho acadêmico e avaliações curriculares',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/funcionarios',
+          descricao: 'Corpo docente, colaboradores e equipe pedagógica',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/aulas',
+          descricao: 'Grade de aulas ministradas e diário escolar',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/bolsas',
+          descricao: 'Concessões de bolsas e políticas de desconto',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+        {
+          endpoint: 'GET /api/v1/extracoes/followups',
+          descricao: 'Acompanhamento do funil de captação e rematrícula',
+          referencia: 'https://sponte-bi.sponteweb.com.br/docs',
+          status: 'Oficialmente documentado / Aguarda concessão de API Key pela escola',
+        },
+      ],
+      rotasLegadasNaoOficiaisOuSemReferenciaVerificavel: [
+        {
+          servico: 'WSIntegracao.asmx / WS_Sponte.asmx (SOAP / WSDL Legado)',
+          motivoDesclassificacao: 'Desclassificado de oficial: sem referência verificável na documentação pública em https://sponte-bi.sponteweb.com.br/docs.',
         },
       ],
       contratosInternosPropostosConsultServices: [
         {
           rotaInterna: '/api/v1/auth/token',
-          finalidade: 'BFF Gateway: Autenticação Servidor-a-Servidor para não expor credenciais no cliente',
+          finalidade: 'BFF Gateway: Autenticação Servidor-a-Servidor protegendo a chave x-api-key',
           tipo: 'Contrato Interno Proposto (Consult Services)',
         },
         {
           rotaInterna: '/api/v1/alunos',
-          finalidade: 'Normalização REST JSON dos dados brutos SOAP e consolidação de horários/refeições',
+          finalidade: 'Normalização REST JSON dos dados brutos e enriquecimento com horários e colação/almoço',
           tipo: 'Contrato Interno Proposto (Consult Services)',
         },
         {
           rotaInterna: '/api/v1/financeiro/titulos',
-          finalidade: 'Agregação de boletos e histórico de conciliação financeira',
+          finalidade: 'Agregação dos dados de contas-a-receber para visualização das parcelas no Portal da Família',
           tipo: 'Contrato Interno Proposto (Consult Services)',
         },
         {
           rotaInterna: '/api/v1/comunicacao/disparos',
-          finalidade: 'Gateway de mensageria da escola (Sponte não possui API aberta de push notifications)',
+          finalidade: 'Gateway de comunicados e auditoria de leitura por responsável (ausente na API de BI)',
           tipo: 'Contrato Interno Proposto (Consult Services)',
         },
       ],
-      diretrizDeSeguranca: 'Nenhum endpoint interno ou não verificado é apresentado como oficial do Sponte.',
+      diretrizDeSeguranca: 'Apenas os endpoints com referência verificável em https://sponte-bi.sponteweb.com.br/docs são classificados como oficiais. Todas as rotas SOAP e hipóteses REST não verificadas tiveram sua classificação de oficial retirada.',
     };
   }
 

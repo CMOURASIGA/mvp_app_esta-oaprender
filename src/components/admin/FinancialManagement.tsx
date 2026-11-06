@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSchool } from '../../context/SchoolContext';
-import { TituloFinanceiro, SituacaoFinanceira } from '../../types/school';
+import { TituloFinanceiro } from '../../types/school';
 import { exportToCSV } from '../../utils/csvExport';
 import {
   DollarSign,
@@ -13,12 +13,11 @@ import {
   Copy,
   Check,
   X,
-  Building,
   Info,
 } from 'lucide-react';
 
 export const FinancialManagement: React.FC = () => {
-  const { titulos, alunos } = useSchool();
+  const { titulos } = useSchool();
 
   const [filtroSituacao, setFiltroSituacao] = useState<string>('TODAS');
   const [filtroCompetencia, setFiltroCompetencia] = useState<string>('TODAS');
