@@ -105,6 +105,27 @@ export const AcceptanceCriteriaModal: React.FC = () => {
       descricao: 'Dados 100% fictícios identificados com aviso ostensivo de homologação.',
       aprovado: true,
     },
+    {
+      id: 'crit-13',
+      categoria: 'Funcional',
+      criterio: 'Leitura Individual de Comunicados por Responsável',
+      descricao: 'A leitura por um responsável (ex: Mariana) não marca como lido para outro (ex: Carlos Eduardo). Confirmado em teste automatizado.',
+      aprovado: true,
+    },
+    {
+      id: 'crit-14',
+      categoria: 'Segurança & Sponte',
+      criterio: 'SponteSchoolProvider sem dados mockados falsos',
+      descricao: 'Contrato técnico estruturado com status explicitamente INDISPONÍVEL até autorização formal e entrega de credenciais oficiais.',
+      aprovado: true,
+    },
+    {
+      id: 'crit-15',
+      categoria: 'Funcional',
+      criterio: 'Suíte de Testes Automatizados (npm test)',
+      descricao: '12 testes de integração cobrindo fluxos ponta a ponta, filtros, CSV e contratos.',
+      aprovado: true,
+    },
   ]);
 
   if (!showAcceptanceCriteria) return null;

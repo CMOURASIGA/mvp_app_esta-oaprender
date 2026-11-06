@@ -62,12 +62,18 @@ export const SponteIntegrationModal: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-slate-500 font-medium">Provedor Atual:</span>
+              <span className="text-slate-500 font-medium">Provedor:</span>
               <button
                 onClick={() => switchProvider(providerType === 'mock' ? 'sponte' : 'mock')}
-                className="px-3 py-1.5 rounded-lg font-bold text-xs bg-teal-800 text-white hover:bg-teal-900 transition-colors cursor-pointer"
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-colors cursor-pointer ${
+                  providerType === 'mock'
+                    ? 'bg-teal-800 text-white hover:bg-teal-900'
+                    : 'bg-amber-800 text-amber-100 hover:bg-amber-900'
+                }`}
               >
-                {providerType === 'mock' ? 'MockProvider (Demonstrativo)' : 'SponteProvider (Ativo)'}
+                {providerType === 'mock'
+                  ? 'MockSchoolProvider (Dados Demonstrativos)'
+                  : 'SponteSchoolProvider (Indisponível - SPEC §8)'}
               </button>
             </div>
           </div>

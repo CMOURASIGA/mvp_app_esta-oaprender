@@ -387,6 +387,7 @@ export const INITIAL_COMUNICADOS: Comunicado[] = [
     anexoTamanho: '1.4 MB',
     destinatariosTotal: 159,
     leiturasConfirmadas: 138,
+    lidosPorResponsaveisIds: ['resp-mariana', 'resp-beatriz', 'resp-rodrigo'],
     lidoPeloUsuario: true,
   },
   {
@@ -402,6 +403,7 @@ export const INITIAL_COMUNICADOS: Comunicado[] = [
     anexoTamanho: '850 KB',
     destinatariosTotal: 159,
     leiturasConfirmadas: 142,
+    lidosPorResponsaveisIds: ['resp-mariana', 'resp-juliana'],
     lidoPeloUsuario: true,
   },
   {
@@ -417,6 +419,7 @@ export const INITIAL_COMUNICADOS: Comunicado[] = [
     anexoTamanho: '2.1 MB',
     destinatariosTotal: 21,
     leiturasConfirmadas: 19,
+    lidosPorResponsaveisIds: [],
     lidoPeloUsuario: false,
   },
   {
@@ -430,6 +433,7 @@ export const INITIAL_COMUNICADOS: Comunicado[] = [
     turmaDestinoNome: 'Todas as Turmas',
     destinatariosTotal: 159,
     leiturasConfirmadas: 125,
+    lidosPorResponsaveisIds: ['resp-mariana'],
     lidoPeloUsuario: true,
   },
   {
@@ -443,6 +447,7 @@ export const INITIAL_COMUNICADOS: Comunicado[] = [
     turmaDestinoNome: '1º Ano Bilíngue - Alpha',
     destinatariosTotal: 21,
     leiturasConfirmadas: 20,
+    lidosPorResponsaveisIds: ['resp-carlos'],
     lidoPeloUsuario: false,
   },
 ];

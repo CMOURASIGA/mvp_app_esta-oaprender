@@ -27,18 +27,21 @@ const STORAGE_KEYS = {
   ALUNOS: 'ea_mock_alunos_v1',
 };
 
+let memoryComunicados: Comunicado[] = [...INITIAL_COMUNICADOS];
+
 function getStoredComunicados(): Comunicado[] {
-  if (typeof window === 'undefined') return INITIAL_COMUNICADOS;
+  if (typeof window === 'undefined') return memoryComunicados;
   try {
     const raw = sessionStorage.getItem(STORAGE_KEYS.COMUNICADOS);
-    if (!raw) return INITIAL_COMUNICADOS;
+    if (!raw) return memoryComunicados;
     return JSON.parse(raw);
   } catch {
-    return INITIAL_COMUNICADOS;
+    return memoryComunicados;
   }
 }
 
 function saveStoredComunicados(list: Comunicado[]) {
+  memoryComunicados = list;
   if (typeof window === 'undefined') return;
   try {
     sessionStorage.setItem(STORAGE_KEYS.COMUNICADOS, JSON.stringify(list));
@@ -141,23 +144,28 @@ export class MockSchoolProvider implements SchoolProvider {
     return INITIAL_ALUNOS.filter((a) => resp.alunosVinculadosIds.includes(a.id));
   }
 
-  async getComunicados(turmaId?: string, alunoId?: string): Promise<Comunicado[]> {
-    const list = getStoredComunicados();
+  async getComunicados(turmaId?: string, alunoId?: string, responsavelId?: string): Promise<Comunicado[]> {
+    let list = getStoredComunicados();
 
     if (alunoId) {
       const aluno = INITIAL_ALUNOS.find((a) => a.id === alunoId);
       if (aluno) {
-        return list.filter(
+        list = list.filter(
           (c) => c.turmaDestinoId === 'TODAS' || c.turmaDestinoId === aluno.turmaId
         );
       }
+    } else if (turmaId && turmaId !== 'TODAS') {
+      list = list.filter((c) => c.turmaDestinoId === 'TODAS' || c.turmaDestinoId === turmaId);
     }
 
-    if (turmaId && turmaId !== 'TODAS') {
-      return list.filter((c) => c.turmaDestinoId === 'TODAS' || c.turmaDestinoId === turmaId);
-    }
-
-    return list;
+    // Map individual read status for the specific viewing responsavel
+    return list.map((c) => ({
+      ...c,
+      lidosPorResponsaveisIds: c.lidosPorResponsaveisIds || [],
+      lidoPeloUsuario: responsavelId
+        ? (c.lidosPorResponsaveisIds || []).includes(responsavelId)
+        : !!c.lidoPeloUsuario,
+    }));
   }
 
   async criarComunicado(dto: CreateComunicadoDTO): Promise<Comunicado> {
@@ -179,7 +187,8 @@ export class MockSchoolProvider implements SchoolProvider {
       anexoNome: dto.anexoNome,
       anexoTamanho: dto.anexoNome ? '1.2 MB' : undefined,
       destinatariosTotal: totalDest,
-      leiturasConfirmadas: 1, // Autor leu
+      leiturasConfirmadas: 0,
+      lidosPorResponsaveisIds: [],
       lidoPeloUsuario: false,
     };
 
@@ -188,16 +197,19 @@ export class MockSchoolProvider implements SchoolProvider {
     return novo;
   }
 
-  async marcarComunicadoLido(comunicadoId: string): Promise<boolean> {
+  async marcarComunicadoLido(comunicadoId: string, responsavelId: string): Promise<boolean> {
     const list = getStoredComunicados();
     const idx = list.findIndex((c) => c.id === comunicadoId);
     if (idx === -1) return false;
 
-    if (!list[idx].lidoPeloUsuario) {
+    const currentLidos = list[idx].lidosPorResponsaveisIds || [];
+    if (!currentLidos.includes(responsavelId)) {
+      const updatedLidos = [...currentLidos, responsavelId];
       list[idx] = {
         ...list[idx],
-        lidoPeloUsuario: true,
+        lidosPorResponsaveisIds: updatedLidos,
         leiturasConfirmadas: list[idx].leiturasConfirmadas + 1,
+        lidoPeloUsuario: true,
       };
       saveStoredComunicados(list);
     }

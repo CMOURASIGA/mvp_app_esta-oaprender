@@ -43,10 +43,10 @@ export interface SchoolProvider {
   getResponsavelById(id: string): Promise<Responsavel | null>;
   getAlunosPorResponsavel(responsavelId: string): Promise<Aluno[]>;
 
-  // Comunicação (com sincronização em tempo real na sessão)
-  getComunicados(turmaId?: string, alunoId?: string): Promise<Comunicado[]>;
+  // Comunicação (com sincronização em tempo real na sessão e tracking por responsável)
+  getComunicados(turmaId?: string, alunoId?: string, responsavelId?: string): Promise<Comunicado[]>;
   criarComunicado(dto: CreateComunicadoDTO): Promise<Comunicado>;
-  marcarComunicadoLido(comunicadoId: string): Promise<boolean>;
+  marcarComunicadoLido(comunicadoId: string, responsavelId: string): Promise<boolean>;
 
   // Financeiro
   getTitulosFinanceiros(filters?: { alunoId?: string; situacao?: string; mes?: string }): Promise<TituloFinanceiro[]>;

@@ -12,85 +12,120 @@ import {
   EventoAgenda,
   IndicadoresDashboard,
 } from '../types/school';
-import { MockSchoolProvider } from './MockSchoolProvider';
+
+/**
+ * Erro emitido quando uma operação tenta consultar o provedor Sponte antes da liberação oficial.
+ * Impede que dados fictícios sejam confundidos ou apresentados como integração ativa.
+ */
+export class SponteIntegrationUnavailableError extends Error {
+  public readonly code = 'SPONTE_INTEGRATION_UNAVAILABLE';
+  public readonly specRef = 'SPEC 00 §3 e §8';
+
+  constructor(metodo?: string) {
+    const action = metodo ? ` ao invocar '${metodo}'` : '';
+    super(
+      `[SponteSchoolProvider] Integração indisponível${action}. Conforme a Seção 3 e 8 da SPEC 00, o contrato de integração com a API Sponte aguarda formalização do termo de autorização e liberação das credenciais oficiais pelo fornecedor. Para preservar a integridade dos dados, nenhuma informação mockada é apresentada sob a assinatura da integração oficial.`
+    );
+    this.name = 'SponteIntegrationUnavailableError';
+  }
+}
 
 /**
  * SponteSchoolProvider
  * 
- * Contrato de integração futura com a plataforma Sponte.
- * Em conformidade com a Seção 3 da SPEC 00:
- * - Não conecta a endpoints reais sem credenciais oficiais concedidas.
- * - Não simula sucesso de autenticação falsa.
- * - Prepara as assinaturas e mapeamentos para ingestão de dados da API do Sponte (SOAP/REST ou BI API).
- * - Utiliza fallback transparente para demonstração enquanto emite alertas técnicos informativos.
+ * Contrato técnico estruturado para futura integração com a plataforma Sponte.
+ * Em estrita conformidade com a SPEC 00 (Seções 3 e 8):
+ * - NÃO conecta a endpoints reais sem credenciais oficiais concedidas.
+ * - NÃO simula sucesso de autenticação falsa.
+ * - NÃO apresenta dados mockados como se fossem integração real.
+ * - Mantém a integração em estado explicitamente INDISPONÍVEL até autorização contratual.
  */
 export class SponteSchoolProvider implements SchoolProvider {
-  name = 'SponteSchoolProvider (Contrato Técnico de Integração)';
-  isMock = false;
+  public readonly name = 'SponteSchoolProvider (Contrato Técnico de Integração)';
+  public readonly isMock = false;
+  public readonly isAvailable = false;
 
-  private mockFallback = new MockSchoolProvider();
-  public connectionStatus = {
-    configured: false,
-    reason: 'Credenciais oficiais do fornecedor Sponte pendentes de autorização contratual pela escola (SPEC 00 §8).',
-    apiType: 'Sponte Educational API & BI Service',
+  public readonly connectionStatus = {
+    status: 'INDISPONIVEL' as const,
+    autorizado: false,
+    motivo: 'Credenciais oficiais do fornecedor Sponte pendentes de autorização contratual e concessão formal de chaves pela escola.',
+    especificacao: 'SPEC 00 §3 e §8 - Consult Services Tecnologia',
+    apiType: 'Sponte Educational API & BI Service (REST/SOAP)',
     requiresServerProxy: true,
   };
 
-  async getDashboardIndicators(turmaId?: string, periodo?: string): Promise<IndicadoresDashboard> {
-    console.info('[SponteSchoolProvider] Executando chamada via contrato Sponte (Modo Homologação - fallback seguro ativado).');
-    return this.mockFallback.getDashboardIndicators(turmaId, periodo);
+  /**
+   * Diagnóstico do contrato técnico para auditoria e homologação
+   */
+  public getContractDiagnostics() {
+    return {
+      provider: this.name,
+      status: this.connectionStatus.status,
+      autorizacaoPendente: true,
+      ambiente: 'Homologação Técnica',
+      endpointsMapeados: [
+        { rota: '/api/v1/auth/token', finalidade: 'Autenticação Servidor-a-Servidor (OAuth2 / Token Sponte)' },
+        { rota: '/api/v1/alunos', finalidade: 'Sincronização de matrículas, turmas e horários contratados' },
+        { rota: '/api/v1/financeiro/titulos', finalidade: 'Consulta de parcelas, competências e baixas' },
+        { rota: '/api/v1/comunicacao/disparos', finalidade: 'Gateway de mensagens institucionais' },
+      ],
+      diretrizDeSeguranca: 'Nenhum dado mockado é retornado quando este provedor está selecionado.',
+    };
+  }
+
+  async getDashboardIndicators(_turmaId?: string, _periodo?: string): Promise<IndicadoresDashboard> {
+    throw new SponteIntegrationUnavailableError('getDashboardIndicators');
   }
 
   async getTurmas(): Promise<Turma[]> {
-    return this.mockFallback.getTurmas();
+    throw new SponteIntegrationUnavailableError('getTurmas');
   }
 
-  async getAlunos(filters?: SchoolFilterParams): Promise<Aluno[]> {
-    return this.mockFallback.getAlunos(filters);
+  async getAlunos(_filters?: SchoolFilterParams): Promise<Aluno[]> {
+    throw new SponteIntegrationUnavailableError('getAlunos');
   }
 
-  async getAlunoById(id: string): Promise<Aluno | null> {
-    return this.mockFallback.getAlunoById(id);
+  async getAlunoById(_id: string): Promise<Aluno | null> {
+    throw new SponteIntegrationUnavailableError('getAlunoById');
   }
 
   async getResponsaveis(): Promise<Responsavel[]> {
-    return this.mockFallback.getResponsaveis();
+    throw new SponteIntegrationUnavailableError('getResponsaveis');
   }
 
-  async getResponsavelById(id: string): Promise<Responsavel | null> {
-    return this.mockFallback.getResponsavelById(id);
+  async getResponsavelById(_id: string): Promise<Responsavel | null> {
+    throw new SponteIntegrationUnavailableError('getResponsavelById');
   }
 
-  async getAlunosPorResponsavel(responsavelId: string): Promise<Aluno[]> {
-    return this.mockFallback.getAlunosPorResponsavel(responsavelId);
+  async getAlunosPorResponsavel(_responsavelId: string): Promise<Aluno[]> {
+    throw new SponteIntegrationUnavailableError('getAlunosPorResponsavel');
   }
 
-  async getComunicados(turmaId?: string, alunoId?: string): Promise<Comunicado[]> {
-    return this.mockFallback.getComunicados(turmaId, alunoId);
+  async getComunicados(_turmaId?: string, _alunoId?: string, _responsavelId?: string): Promise<Comunicado[]> {
+    throw new SponteIntegrationUnavailableError('getComunicados');
   }
 
-  async criarComunicado(dto: CreateComunicadoDTO): Promise<Comunicado> {
-    // Sponte BI API é read-only; o envio de comunicados requer gateway próprio ou módulo transacional específico
-    return this.mockFallback.criarComunicado(dto);
+  async criarComunicado(_dto: CreateComunicadoDTO): Promise<Comunicado> {
+    throw new SponteIntegrationUnavailableError('criarComunicado');
   }
 
-  async marcarComunicadoLido(comunicadoId: string): Promise<boolean> {
-    return this.mockFallback.marcarComunicadoLido(comunicadoId);
+  async marcarComunicadoLido(_comunicadoId: string, _responsavelId: string): Promise<boolean> {
+    throw new SponteIntegrationUnavailableError('marcarComunicadoLido');
   }
 
-  async getTitulosFinanceiros(filters?: {
+  async getTitulosFinanceiros(_filters?: {
     alunoId?: string;
     situacao?: string;
     mes?: string;
   }): Promise<TituloFinanceiro[]> {
-    return this.mockFallback.getTitulosFinanceiros(filters);
+    throw new SponteIntegrationUnavailableError('getTitulosFinanceiros');
   }
 
-  async getTituloById(id: string): Promise<TituloFinanceiro | null> {
-    return this.mockFallback.getTituloById(id);
+  async getTituloById(_id: string): Promise<TituloFinanceiro | null> {
+    throw new SponteIntegrationUnavailableError('getTituloById');
   }
 
-  async getEventosAgenda(alunoId?: string): Promise<EventoAgenda[]> {
-    return this.mockFallback.getEventosAgenda(alunoId);
+  async getEventosAgenda(_alunoId?: string): Promise<EventoAgenda[]> {
+    throw new SponteIntegrationUnavailableError('getEventosAgenda');
   }
 }

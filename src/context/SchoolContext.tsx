@@ -48,6 +48,7 @@ interface SchoolContextType {
   // Provider
   providerType: ProviderType;
   switchProvider: (type: ProviderType) => void;
+  isSponteUnavailable: boolean;
 
   // Session-reactive actions
   publicarComunicado: (dto: CreateComunicadoDTO) => Promise<Comunicado>;
@@ -61,6 +62,8 @@ interface SchoolContextType {
   setShowStorytelling: (show: boolean) => void;
   showAcceptanceCriteria: boolean;
   setShowAcceptanceCriteria: (show: boolean) => void;
+  isMobileDevicePreview: boolean;
+  setIsMobileDevicePreview: (val: boolean) => void;
 }
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
@@ -72,6 +75,7 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
 
   const [providerType, setProviderTypeState] = useState<ProviderType>(getCurrentProviderType());
   const [isLoading, setIsLoading] = useState(true);
+  const [isSponteUnavailable, setIsSponteUnavailable] = useState(false);
 
   const [responsaveis, setResponsaveis] = useState<Responsavel[]>([]);
   const [activeResponsavel, setActiveResponsavelState] = useState<Responsavel | null>(null);
@@ -89,10 +93,24 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
   const [showSponteDocs, setShowSponteDocs] = useState(false);
   const [showStorytelling, setShowStorytelling] = useState(false);
   const [showAcceptanceCriteria, setShowAcceptanceCriteria] = useState(false);
+  const [isMobileDevicePreview, setIsMobileDevicePreview] = useState(false);
 
+  /**
+   * Carrega os dados do provedor selecionado.
+   * Depende EXCLUSIVAMENTE de [providerType].
+   * Alternar responsáveis ou alunos NÃO dispara chamadas assíncronas redundantes.
+   */
   const carregarDados = useCallback(async () => {
     setIsLoading(true);
     const provider = getSchoolProvider(providerType);
+
+    if (providerType === 'sponte') {
+      setIsSponteUnavailable(true);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsSponteUnavailable(false);
     try {
       const [allTurmas, allAlunos, allResponsaveis, allComunicados, allEventos, allTitulos, dashIndicators] =
         await Promise.all([
@@ -108,50 +126,63 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
       setTurmas(allTurmas);
       setAlunos(allAlunos);
       setResponsaveis(allResponsaveis);
-      setComunicados(allComunicados);
       setEventos(allEventos);
       setTitulos(allTitulos);
       setIndicadores(dashIndicators);
 
-      // Default active responsavel & aluno if none chosen
-      if (!activeResponsavel && allResponsaveis.length > 0) {
-        const defaultResp = allResponsaveis[0]; // Mariana Vasconcellos (has 2 kids)
-        setActiveResponsavelState(defaultResp);
-        const kids = allAlunos.filter((a) => defaultResp.alunosVinculadosIds.includes(a.id));
-        setAlunosVinculados(kids);
-        if (kids.length > 0) {
-          setActiveAlunoState(kids[0]);
+      // Definir responsável padrão se ainda não definido
+      setActiveResponsavelState((currResp) => {
+        const resp = currResp || allResponsaveis[0] || null;
+        if (resp) {
+          const kids = allAlunos.filter((a) => resp.alunosVinculadosIds.includes(a.id));
+          setAlunosVinculados(kids);
+          setActiveAlunoState((currAluno) => {
+            if (currAluno && kids.some((k) => k.id === currAluno.id)) {
+              return currAluno;
+            }
+            return kids[0] || null;
+          });
+
+          // Mapeia os comunicados com a leitura individual deste responsável
+          setComunicados(
+            allComunicados.map((c) => ({
+              ...c,
+              lidoPeloUsuario: (c.lidosPorResponsaveisIds || []).includes(resp.id),
+            }))
+          );
+        } else {
+          setComunicados(allComunicados);
         }
-      } else if (activeResponsavel) {
-        const kids = allAlunos.filter((a) => activeResponsavel.alunosVinculadosIds.includes(a.id));
-        setAlunosVinculados(kids);
-        if (activeAluno) {
-          const updatedActive = kids.find((k) => k.id === activeAluno.id) || kids[0] || null;
-          setActiveAlunoState(updatedActive);
-        } else if (kids.length > 0) {
-          setActiveAlunoState(kids[0]);
-        }
-      }
+        return resp;
+      });
     } catch (err) {
       console.error('Erro ao carregar dados do provedor:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [providerType, activeResponsavel, activeAluno]);
+  }, [providerType]);
 
   useEffect(() => {
     carregarDados();
   }, [carregarDados]);
 
+  /**
+   * Alternância imediata de responsável sem recarregamento de rede.
+   * Reavalia em memória a lista de filhos vinculados e a situação individual de leitura.
+   */
   const setActiveResponsavel = (resp: Responsavel) => {
     setActiveResponsavelState(resp);
     const kids = alunos.filter((a) => resp.alunosVinculadosIds.includes(a.id));
     setAlunosVinculados(kids);
-    if (kids.length > 0) {
-      setActiveAlunoState(kids[0]);
-    } else {
-      setActiveAlunoState(null);
-    }
+    setActiveAlunoState(kids[0] || null);
+
+    // Atualiza individualmente a situação de leitura dos comunicados para o novo responsável
+    setComunicados((prev) =>
+      prev.map((c) => ({
+        ...c,
+        lidoPeloUsuario: (c.lidosPorResponsaveisIds || []).includes(resp.id),
+      }))
+    );
   };
 
   const setActiveAluno = (aluno: Aluno) => {
@@ -166,23 +197,45 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
   const publicarComunicado = async (dto: CreateComunicadoDTO): Promise<Comunicado> => {
     const provider = getSchoolProvider(providerType);
     const novo = await provider.criarComunicado(dto);
-    // Refresh comunicados and indicators immediately
     const updated = await provider.getComunicados();
-    setComunicados(updated);
+
+    const currentRespId = activeResponsavel?.id;
+    setComunicados(
+      updated.map((c) => ({
+        ...c,
+        lidoPeloUsuario: currentRespId ? (c.lidosPorResponsaveisIds || []).includes(currentRespId) : false,
+      }))
+    );
+
     const updatedInd = await provider.getDashboardIndicators();
     setIndicadores(updatedInd);
     return novo;
   };
 
+  /**
+   * Marca o comunicado como lido exclusivamente para o responsável ativo.
+   */
   const marcarComoLido = async (comunicadoId: string): Promise<void> => {
+    if (!activeResponsavel) return;
+    const respId = activeResponsavel.id;
     const provider = getSchoolProvider(providerType);
-    await provider.marcarComunicadoLido(comunicadoId);
+    await provider.marcarComunicadoLido(comunicadoId, respId);
+
     setComunicados((prev) =>
-      prev.map((c) =>
-        c.id === comunicadoId
-          ? { ...c, lidoPeloUsuario: true, leiturasConfirmadas: c.leiturasConfirmadas + 1 }
-          : c
-      )
+      prev.map((c) => {
+        if (c.id === comunicadoId) {
+          const currentLidos = c.lidosPorResponsaveisIds || [];
+          const jaLido = currentLidos.includes(respId);
+          const updatedLidos = jaLido ? currentLidos : [...currentLidos, respId];
+          return {
+            ...c,
+            lidosPorResponsaveisIds: updatedLidos,
+            lidoPeloUsuario: true,
+            leiturasConfirmadas: jaLido ? c.leiturasConfirmadas : c.leiturasConfirmadas + 1,
+          };
+        }
+        return c;
+      })
     );
   };
 
@@ -210,6 +263,7 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
         isLoading,
         providerType,
         switchProvider,
+        isSponteUnavailable,
         publicarComunicado,
         marcarComoLido,
         recarregarDados: carregarDados,
@@ -219,6 +273,8 @@ export const SchoolProviderComponent: React.FC<{ children: ReactNode }> = ({ chi
         setShowStorytelling,
         showAcceptanceCriteria,
         setShowAcceptanceCriteria,
+        isMobileDevicePreview,
+        setIsMobileDevicePreview,
       }}
     >
       {children}

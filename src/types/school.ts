@@ -82,6 +82,7 @@ export interface Comunicado {
   anexoTamanho?: string;
   destinatariosTotal: number;
   leiturasConfirmadas: number;
+  lidosPorResponsaveisIds: string[];
   lidoPeloUsuario?: boolean;
 }
 
